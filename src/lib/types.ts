@@ -32,3 +32,5 @@ export const formatDropTime = (iso: string) =>
     minute: "2-digit",
     timeZone: "America/Denver",
   });
+
+export const ALLERGENS = ["wheat", "milk", "eggs", "walnuts", "pecans", "almonds", "peanuts", "soy", "sesame"];

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { adminConfigured, isAdmin } from "@/lib/auth";
 import { getDb } from "@/lib/server";
 import { formatDropTime, money } from "@/lib/types";
@@ -46,7 +47,11 @@ export default async function AdminPage() {
     return (
       <main className="page admin">
         <AdminHeader />
-        <section className="panel" style={{ background: "var(--paper)" }}>No drops yet. Run first-drop.sql in Supabase to create one.</section>
+        <Link href="/admin/menu" className="menu-link">
+        <span>Edit menu &amp; start next drop</span>
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+      </Link>
+        <section className="panel" style={{ background: "var(--paper)" }}>No drops yet. Start one from the menu page.</section>
       </main>
     );
   }
@@ -80,6 +85,10 @@ export default async function AdminPage() {
   return (
     <main className="page admin">
       <AdminHeader />
+      <Link href="/admin/menu" className="menu-link">
+        <span>Edit menu &amp; start next drop</span>
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+      </Link>
 
       <section className="panel" style={{ background: "var(--paper)", display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>

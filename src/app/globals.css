@@ -119,3 +119,19 @@ body:has(.admin) { background: var(--ink); }
   .menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
   .cartbar button { max-width: 480px; }
 }
+
+/* menu & drop setup */
+.notice { background: var(--butter); border-radius: 16px; padding: 12px 14px; font-size: 14px; font-weight: 500; }
+.textarea { height: auto; padding: 10px 14px; resize: vertical; font-size: 16px; }
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chipbox { position: relative; display: inline-flex; }
+.chipbox input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chipbox span { min-height: 40px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; border: 2px solid var(--ink); background: var(--paper); font-size: 13px; font-weight: 600; cursor: pointer; }
+.chipbox input:checked + span { background: var(--ink); color: var(--paper); }
+.chipbox input:focus-visible + span { outline: 3px solid var(--coral); outline-offset: 2px; }
+.summary-link { cursor: pointer; font-size: 13px; font-weight: 500; text-decoration: underline; min-height: 44px; display: inline-flex; align-items: center; }
+.mini.danger { color: #8a2a1b; border-color: #8a2a1b; }
+.back.light { color: var(--paper); border-color: var(--paper); }
+.file { font-size: 14px; }
+.menu-link { display: flex; align-items: center; justify-content: space-between; background: var(--paper); border-radius: 18px; padding: 0 16px; min-height: 52px; font-weight: 600; font-size: 14px; text-decoration: none; }
