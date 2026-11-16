@@ -92,3 +92,30 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .kv div { background: var(--cream); border-radius: 14px; padding: 10px 12px; overflow-wrap: anywhere; }
 .kv small { display: block; font-size: 11px; color: var(--muted); }
 .preview-banner { background: var(--lilac); border-radius: 16px; padding: 10px 14px; font-size: 13px; }
+
+/* baker view */
+body:has(.admin) { background: var(--ink); }
+.admin { gap: 14px; }
+.admin .status.closed { background: var(--line); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stats div { border-radius: 18px; padding: 12px; }
+.stats small { display: block; font-size: 11px; }
+.stats b { font-family: var(--font-display), sans-serif; font-size: 24px; }
+.bar { height: 10px; background: #e8e0d2; border-radius: 999px; overflow: hidden; }
+.bar div { height: 10px; background: var(--coral); border-radius: 999px; }
+.order { background: #fff; border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.badge { border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; }
+.badge.ok { background: #d6f0d9; color: #1f5130; }
+.badge.due { background: #ffe1d9; color: #8a2a1b; }
+.mini { min-height: 44px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper); font-weight: 600; font-size: 13px; }
+.mini.ghost { background: #fff; color: var(--ink); }
+.mini.light { background: transparent; color: var(--paper); border-color: var(--paper); }
+
+.menu-grid { display: flex; flex-direction: column; gap: 16px; }
+
+/* wider screens: let the menu sit in two columns */
+@media (min-width: 900px) {
+  .page:not(.admin) { max-width: 880px; }
+  .menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .cartbar button { max-width: 480px; }
+}

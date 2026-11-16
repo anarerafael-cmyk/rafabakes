@@ -163,6 +163,7 @@ export default function Shop({ drop, preview, venmo, zelle, cardEnabled }: Props
 
       <h2 className="section-title">the menu</h2>
 
+      <div className="menu-grid">
       {drop.items.map((i) => {
         const n = qty[i.dropItemId] ?? 0;
         return (
@@ -197,6 +198,7 @@ export default function Shop({ drop, preview, venmo, zelle, cardEnabled }: Props
           </article>
         );
       })}
+      </div>
 
       <section id="about" className="panel about">
         <h2>homemade.<br />small batch.<br />big flavor.</h2>
