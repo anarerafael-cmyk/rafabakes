@@ -1,36 +1,22 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# rafa sourdough & cookies — rafabakes.com
 
-## Getting Started
+Preorder site for weekly bake drops: menu with live "left" counts, checkout by
+card/Apple Pay (Stripe), Venmo or Zelle, and an order page that doubles as a receipt.
 
-First, run the development server:
+## Setup (one time)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. **Supabase**: new project → SQL Editor → paste `supabase/schema.sql` → Run.
+   Then edit and run `supabase/first-drop.sql` to open your first drop.
+2. **Vercel**: Add New → Project → import this GitHub repo → Deploy.
+3. **Environment variables** (Vercel → Settings → Environment Variables): every name
+   in `.env.example`. Redeploy after adding them.
+4. **Stripe webhook**: Stripe → Developers → Webhooks → Add endpoint
+   `https://rafabakes.com/api/stripe/webhook`, events `checkout.session.completed`
+   and `checkout.session.expired`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
+5. **Domain**: Vercel → Settings → Domains → add `rafabakes.com`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Use Stripe test keys first (card `4242 4242 4242 4242`, any future date, any CVC),
+then swap in live keys.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Coming next
+Baker view (orders, Mark paid, bake list) · menu & drop setup · reviews · text reminders.
