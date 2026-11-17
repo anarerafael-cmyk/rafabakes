@@ -135,3 +135,9 @@ body:has(.admin) { background: var(--ink); }
 .back.light { color: var(--paper); border-color: var(--paper); }
 .file { font-size: 14px; }
 .menu-link { display: flex; align-items: center; justify-content: space-between; background: var(--paper); border-radius: 18px; padding: 0 16px; min-height: 52px; font-weight: 600; font-size: 14px; text-decoration: none; }
+
+/* reviews */
+.review { background: var(--paper); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.review-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.review-grid:empty { display: none; }
+.starbtn { width: 44px; height: 44px; border: none; background: transparent; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); }

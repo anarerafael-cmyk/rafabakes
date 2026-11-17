@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Drop, PaymentMethod, formatDropTime, money } from "@/lib/types";
 
-type Props = { drop: Drop; preview: boolean; venmo: string; zelle: string; cardEnabled: boolean };
+type Props = { drop: Drop; preview: boolean; venmo: string; zelle: string; cardEnabled: boolean; reviews?: React.ReactNode };
 
 const ClockIcon = () => (
   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
@@ -12,7 +12,7 @@ const PinIcon = () => (
   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
 );
 
-export default function Shop({ drop, preview, venmo, zelle, cardEnabled }: Props) {
+export default function Shop({ drop, preview, venmo, zelle, cardEnabled, reviews }: Props) {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [step, setStep] = useState<"menu" | "checkout">("menu");
   const [slot, setSlot] = useState(drop.pickupSlots[0] ?? drop.pickupLabel);
@@ -147,7 +147,7 @@ export default function Shop({ drop, preview, venmo, zelle, cardEnabled }: Props
     <main className="page">
       <header className="topbar">
         <img className="logo" src="/logo.png" alt="rafa sourdough & cookies" />
-        <a className="pill-link" href="#about">About</a>
+        <a className="pill-link" href="#reviews">Reviews</a>
       </header>
 
       {preview && <div className="preview-banner">Preview mode: sample menu, ordering is off until the database is connected.</div>}
@@ -208,6 +208,8 @@ export default function Shop({ drop, preview, venmo, zelle, cardEnabled }: Props
           <span>no preservatives</span>
         </div>
       </section>
+
+      {reviews}
 
       <p className="fineprint">
         Made in a home kitchen that is not subject to state licensure or inspection and that may also process common food allergens.

@@ -90,6 +90,10 @@ export default async function OrderPage({
         {drop?.pickup_location && <p style={{ margin: 0, fontSize: 14 }}><b>{drop.pickup_location}</b></p>}
       </section>
 
+      {order.status !== "cancelled" && (
+        <Link className="cta ghost" href={`/?review=${order.code}#reviews`}>Leave a review after pickup</Link>
+      )}
+
       <p className="fineprint">Save this page. It&apos;s your receipt.</p>
     </main>
   );

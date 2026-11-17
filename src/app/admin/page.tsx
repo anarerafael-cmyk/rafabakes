@@ -38,6 +38,14 @@ export default async function AdminPage() {
   const db = getDb();
   if (!db) return <main className="page"><div className="error">The database isn&apos;t connected.</div></main>;
 
+  const { count: pendingReviews } = await db.from("reviews").select("id", { count: "exact", head: true }).eq("status", "pending");
+  const reviewsLink = (
+    <Link href="/admin/reviews" className="menu-link">
+      <span>Reviews{pendingReviews ? ` · ${pendingReviews} waiting` : ""}</span>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+    </Link>
+  );
+
   const now = new Date().toISOString();
   const { data: opened } = await db.from("drops").select("*").lte("opens_at", now).order("opens_at", { ascending: false }).limit(1);
   const { data: upcoming } = await db.from("drops").select("*").gt("opens_at", now).order("opens_at").limit(1);
@@ -51,6 +59,7 @@ export default async function AdminPage() {
         <span>Edit menu &amp; start next drop</span>
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
       </Link>
+        {reviewsLink}
         <section className="panel" style={{ background: "var(--paper)" }}>No drops yet. Start one from the menu page.</section>
       </main>
     );
@@ -89,6 +98,7 @@ export default async function AdminPage() {
         <span>Edit menu &amp; start next drop</span>
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
       </Link>
+      {reviewsLink}
 
       <section className="panel" style={{ background: "var(--paper)", display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
