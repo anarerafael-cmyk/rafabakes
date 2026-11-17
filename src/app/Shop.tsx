@@ -100,7 +100,7 @@ export default function Shop({ drop, preview, venmo, zelle, cardEnabled, reviews
                   </button>
                 ))}
               </div>
-              {drop.pickupLocation && <p className="allergens" style={{ fontSize: 13 }}>{drop.pickupLocation} · exact spot comes with your confirmation</p>}
+              <p className="allergens" style={{ fontSize: 13 }}>We&apos;ll text you the exact spot with your pickup reminder.</p>
             </fieldset>
           )}
 
@@ -219,7 +219,7 @@ export default function Shop({ drop, preview, venmo, zelle, cardEnabled, reviews
         <div className="steps">
           <div className="step"><span className="step-num">1</span><div><b>Order by {closes}</b><p>Pick your bakes and a pickup time.{payWords.length ? ` Pay by ${joinWords(payWords)}.` : ""}</p></div></div>
           <div className="step"><span className="step-num">2</span><div><b>Rafael bakes it fresh</b><p>{SITE.bakeStep}</p></div></div>
-          <div className="step"><span className="step-num">3</span><div><b>Pick up {drop.pickupLabel}</b><p>{drop.pickupLocation ? `${drop.pickupLocation}. ` : ""}Exact spot comes with your confirmation.</p></div></div>
+          <div className="step"><span className="step-num">3</span><div><b>Pick up {drop.pickupLabel}</b><p>We&apos;ll text you the exact spot with your pickup reminder.</p></div></div>
         </div>
       </section>
 

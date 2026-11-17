@@ -164,8 +164,7 @@ export default async function OrderPage({
           </span>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <b style={{ fontSize: 17 }}>{pd ? `${weekday}, ${month} ${dayNum} · ` : ""}{order.pickup_slot}</b>
-            {drop?.pickup_location && <span style={{ fontSize: 14, fontWeight: 700 }}>{drop.pickup_location}</span>}
-            <span style={{ fontSize: 13, color: "var(--body)" }}>We&apos;ll text a reminder the night before.</span>
+            <span style={{ fontSize: 14, color: "var(--body)" }}>We&apos;ll text you a reminder and the pickup location the night before.</span>
           </div>
         </div>
       </section>

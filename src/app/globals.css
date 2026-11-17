@@ -92,7 +92,7 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .step p { margin: 2px 0 0; font-size: 13px; color: var(--body); line-height: 1.45; }
 
 /* mountain ridge + dark blocks */
-.ridge { display: block; width: 100%; height: auto; }
+.ridge { display: block; width: 100%; height: auto; position: relative; z-index: 1; margin-bottom: -1px; } /* overlap the dark block below so no seam shows */
 .dark { background: var(--ink); color: var(--paper); }
 .about { border-radius: 0 0 24px 24px; padding: 8px 18px 20px; display: flex; gap: 14px; align-items: center; }
 .about-photo { flex: none; width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--butter); object-fit: cover; background: var(--cream); }

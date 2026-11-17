@@ -144,7 +144,7 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
               <textarea id="pickup_slots" name="pickup_slots" className="input textarea" rows={3} defaultValue={(last?.pickup_slots ?? ["Sat 9–10 AM", "Sat 10–11 AM"]).join("\n")} />
             </div>
             <div className="field">
-              <label htmlFor="pickup_location">Pickup spot</label>
+              <label htmlFor="pickup_location">Pickup address (private: not shown on the site)</label>
               <input id="pickup_location" name="pickup_location" className="input" defaultValue={last?.pickup_location ?? ""} />
             </div>
             <fieldset style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
