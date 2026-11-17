@@ -207,7 +207,16 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 /* menu & recipe setup */
 .notice { background: var(--butter); border: 2px solid var(--ink); border-radius: 16px; padding: 12px 14px; font-size: 14px; font-weight: 700; }
 .textarea { height: auto; padding: 10px 14px; resize: vertical; font-size: 16px; }
-.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; } /* stacks on phones */
+.two-col > * { min-width: 0; }
+/* iPhone Safari won't shrink date/time boxes to fit unless their built-in styling is turned off */
+input[type="date"], input[type="datetime-local"], input[type="time"] {
+  -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%;
+  line-height: 46px; text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value, input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; }
+.input { min-width: 0; max-width: 100%; }
+.page, .panel, .card, form, fieldset { min-width: 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chipbox { position: relative; display: inline-flex; }
 .chipbox input { position: absolute; opacity: 0; width: 1px; height: 1px; }
