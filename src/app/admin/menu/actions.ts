@@ -107,6 +107,7 @@ export async function createDrop(form: FormData) {
     pickup_label: String(form.get("pickup_label") ?? "").trim().slice(0, 60) || "Pickup",
     pickup_location: String(form.get("pickup_location") ?? "").trim().slice(0, 200),
     pickup_slots: slots,
+    ...(/^\d{4}-\d{2}-\d{2}$/.test(String(form.get("pickup_date") ?? "")) ? { pickup_date: String(form.get("pickup_date")) } : {}),
   }).select("id").single();
   if (error || !drop) back("Couldn't create the drop. Try again.");
 
@@ -124,4 +125,32 @@ export async function updateCaps(form: FormData) {
   }
   refresh();
   back("Amounts updated.");
+}
+
+export async function saveRecipe(
+  productId: string,
+  batchYield: number,
+  rows: { name: string; amount: number; unit: string }[],
+): Promise<{ ok: boolean; error?: string }> {
+  const db = await requireAdmin();
+  const clean = rows
+    .map((r, i) => ({
+      product_id: productId,
+      name: String(r.name).trim().slice(0, 60),
+      amount: Math.max(0, Number(r.amount) || 0),
+      unit: ["g", "ml", "each"].includes(r.unit) ? r.unit : "g",
+      sort: i,
+    }))
+    .filter((r) => r.name && r.amount > 0)
+    .slice(0, 40);
+  const { error: e1 } = await db.from("products").update({ batch_yield: Math.max(1, Math.floor(batchYield) || 1) }).eq("id", productId);
+  if (e1) return { ok: false, error: "Couldn't save. Did you run 004-new-look.sql in Supabase?" };
+  await db.from("recipe_ingredients").delete().eq("product_id", productId);
+  if (clean.length) {
+    const { error } = await db.from("recipe_ingredients").insert(clean);
+    if (error) return { ok: false, error: "Couldn't save the ingredients. Try again." };
+  }
+  revalidatePath("/admin");
+  revalidatePath("/admin/menu");
+  return { ok: true };
 }

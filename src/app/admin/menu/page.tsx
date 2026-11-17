@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import { isoToDenverLocal, WEEK_MS } from "@/lib/denver";
 import { getDb } from "@/lib/server";
 import { ALLERGENS, money } from "@/lib/types";
 import PhotoInput from "./PhotoInput";
+import RecipeEditor from "./RecipeEditor";
+import AdminHeader from "../Header";
 import { addProduct, archiveProduct, createDrop, toggleProduct, updateCaps, updateProduct } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export const metadata: Metadata = { title: "menu & drop · rafa", robots: { inde
 
 type Product = {
   id: string; name: string; description: string; price_cents: number; allergens: string[];
-  image_url: string | null; badge: string | null; active: boolean;
+  image_url: string | null; badge: string | null; active: boolean; batch_yield?: number;
 };
 
 function ProductFields({ p, idPrefix }: { p?: Product; idPrefix: string }) {
@@ -63,8 +64,15 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
     db.from("drops").select("*, drop_items(id, cap, product_id)").order("opens_at", { ascending: false }).limit(1),
   ]);
   const products = (productData ?? []) as Product[];
+  const { data: recipeData } = await db.from("recipe_ingredients").select("product_id, name, amount, unit, sort").order("sort");
+  const recipes = new Map<string, { name: string; amount: number; unit: "g" | "ml" | "each" }[]>();
+  for (const r of recipeData ?? []) {
+    const list = recipes.get(r.product_id) ?? [];
+    list.push({ name: r.name, amount: Number(r.amount), unit: r.unit });
+    recipes.set(r.product_id, list);
+  }
   const last = lastDrops?.[0] as
-    | { id: string; opens_at: string; closes_at: string; pickup_label: string; pickup_location: string; pickup_slots: string[];
+    | { id: string; opens_at: string; closes_at: string; pickup_label: string; pickup_location: string; pickup_slots: string[]; pickup_date?: string | null;
         drop_items: { id: string; cap: number; product_id: string }[] }
     | undefined;
 
@@ -80,24 +88,18 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
   if (lastStillRunning) { opens += WEEK_MS; closes += WEEK_MS; }
 
   const active = products.filter((p) => p.active);
+  // Pickup day defaults to two days after orders close.
+  const pickupDefault = isoToDenverLocal(new Date(closes + 2 * 864e5).toISOString()).slice(0, 10);
 
   return (
     <main className="page admin">
-      <header style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--paper)" }}>
-        <Link href="/admin" className="back light" aria-label="Back to this week">
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 5l-7 7 7 7" /></svg>
-        </Link>
-        <div>
-          <span style={{ fontSize: 12, color: "var(--line)" }}>baker view</span>
-          <h1 style={{ fontSize: 28, fontWeight: 700 }}>menu &amp; drop</h1>
-        </div>
-      </header>
+      <AdminHeader title="menu & recipes" back="/admin" />
 
       {msg && <div className="notice" role="status">{msg}</div>}
 
       {lastStillRunning && last && last.drop_items.length > 0 && (
-        <form action={updateCaps} className="panel" style={{ background: "var(--paper)", display: "flex", flexDirection: "column", gap: 10 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600 }}>this drop&apos;s amounts</h2>
+        <form action={updateCaps} className="card panel" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <h2 style={{ fontSize: 24 }}>this drop&apos;s amounts</h2>
           <p className="allergens" style={{ margin: 0 }}>Made extra, or running short? Change how many are for sale right now.</p>
           {last.drop_items.map((d) => (
             <div key={d.id} className="line" style={{ alignItems: "center" }}>
@@ -110,8 +112,8 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
         </form>
       )}
 
-      <section className="panel" style={{ background: "var(--butter)", display: "flex", flexDirection: "column", gap: 12 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600 }}>start the next drop</h2>
+      <section className="panel" style={{ background: "var(--butter)", border: "2px solid var(--ink)", display: "flex", flexDirection: "column", gap: 12 }}>
+        <h2 style={{ fontSize: 24 }}>start the next drop</h2>
         <p style={{ margin: 0, fontSize: 13 }}>
           {last ? "Filled in from last week, one week later. Change anything, then start it." : "Set the times and how many of each bake you'll make."}
         </p>
@@ -134,6 +136,10 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
               <input id="pickup_label" name="pickup_label" className="input" required defaultValue={last?.pickup_label ?? "Sat, 9–11 AM"} />
             </div>
             <div className="field">
+              <label htmlFor="pickup_date">Pickup day</label>
+              <input id="pickup_date" name="pickup_date" type="date" className="input" required defaultValue={pickupDefault} />
+            </div>
+            <div className="field">
               <label htmlFor="pickup_slots">Pickup times customers choose from (one per line)</label>
               <textarea id="pickup_slots" name="pickup_slots" className="input textarea" rows={3} defaultValue={(last?.pickup_slots ?? ["Sat 9–10 AM", "Sat 10–11 AM"]).join("\n")} />
             </div>
@@ -144,7 +150,7 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
             <fieldset style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
               <legend style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>How many of each (0 = not this week)</legend>
               {active.map((p) => (
-                <div key={p.id} className="line" style={{ alignItems: "center", background: "var(--paper)", borderRadius: 14, padding: "6px 6px 6px 14px" }}>
+                <div key={p.id} className="line" style={{ alignItems: "center", background: "var(--paper)", border: "2px solid var(--ink)", borderRadius: 14, padding: "6px 6px 6px 14px" }}>
                   <label htmlFor={`cap-new-${p.id}`} style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</label>
                   <input id={`cap-new-${p.id}`} name={`cap_${p.id}`} type="number" min="0" className="input" style={{ width: 90 }} defaultValue={lastCap.get(p.id) ?? 8} />
                 </div>
@@ -155,9 +161,9 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
         )}
       </section>
 
-      <section className="panel" style={{ background: "var(--paper)", display: "flex", flexDirection: "column", gap: 10 }}>
+      <section className="card panel" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div className="line" style={{ alignItems: "baseline" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600 }}>your bakes</h2>
+          <h2 style={{ fontSize: 24 }}>your bakes</h2>
           <span className="allergens">{active.length} on the menu</span>
         </div>
         {products.map((p) => (
@@ -166,7 +172,7 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
               <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                 {p.image_url
                   ? <img src={p.image_url} alt="" style={{ width: 44, height: 44, borderRadius: 12, objectFit: "cover", flex: "none" }} />
-                  : <span style={{ width: 44, height: 44, borderRadius: 12, background: "var(--lilac)", flex: "none" }} />}
+                  : <span style={{ width: 44, height: 44, borderRadius: 12, background: "var(--cream)", border: "2px solid var(--ink)", flex: "none" }} />}
                 <div style={{ minWidth: 0 }}>
                   <b style={{ fontSize: 15 }}>{p.name}</b>
                   <div className="allergens">{money(p.price_cents)}{p.allergens.length ? ` · contains ${p.allergens.join(", ")}` : ""}</div>
@@ -178,6 +184,10 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
                 <button className={`mini ${p.active ? "" : "ghost"}`} aria-pressed={p.active}>{p.active ? "On menu" : "Off"}</button>
               </form>
             </div>
+            <details>
+              <summary className="summary-link">Recipe{recipes.get(p.id)?.length ? ` · ${recipes.get(p.id)!.length} ingredients` : ""}</summary>
+              <RecipeEditor productId={p.id} productName={p.name} batchYield={p.batch_yield ?? 1} initial={recipes.get(p.id) ?? []} />
+            </details>
             <details>
               <summary className="summary-link">Edit</summary>
               <form action={updateProduct} style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
@@ -194,9 +204,9 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
         ))}
       </section>
 
-      <section className="panel" style={{ background: "var(--pink)" }}>
+      <section className="card panel" style={{ background: "var(--sky)" }}>
         <form action={addProduct} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600 }}>add a bake</h2>
+          <h2 style={{ fontSize: 24 }}>add a bake</h2>
           <ProductFields idPrefix="new" />
           <button className="cta" style={{ fontSize: 18, minHeight: 56 }}>Add to menu</button>
           <p style={{ margin: 0, fontSize: 12 }}>New bakes show up in the next drop you start.</p>

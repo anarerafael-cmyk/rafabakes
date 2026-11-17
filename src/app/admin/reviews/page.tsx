@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { isAdmin } from "@/lib/auth";
 import { getDb } from "@/lib/server";
+import AdminHeader from "../Header";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "reviews · rafa", robots: { index: false } };
@@ -36,27 +36,19 @@ export default async function ReviewsAdmin() {
     .order("created_at", { ascending: false });
   const reviews = (data ?? []) as unknown as Review[];
   const groups: { title: string; items: Review[] }[] = [
-    { title: "waiting for you", items: reviews.filter((r) => r.status === "pending") },
+    { title: "new, waiting for you", items: reviews.filter((r) => r.status === "pending") },
     { title: "showing on the site", items: reviews.filter((r) => r.status === "approved") },
     { title: "hidden", items: reviews.filter((r) => r.status === "hidden") },
   ];
 
   return (
     <main className="page admin">
-      <header style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--paper)" }}>
-        <Link href="/admin" className="back light" aria-label="Back to this week">
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 5l-7 7 7 7" /></svg>
-        </Link>
-        <div>
-          <span style={{ fontSize: 12, color: "var(--line)" }}>baker view</span>
-          <h1 style={{ fontSize: 28, fontWeight: 700 }}>reviews</h1>
-        </div>
-      </header>
+      <AdminHeader title="reviews" back="/admin" />
 
       {groups.map((g) => (
-        <section key={g.title} className="panel" style={{ background: "var(--paper)", display: "flex", flexDirection: "column", gap: 10 }}>
+        <section key={g.title} className="card panel" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="line" style={{ alignItems: "baseline" }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600 }}>{g.title}</h2>
+            <h2 style={{ fontSize: 24 }}>{g.title}</h2>
             <span className="allergens">{g.items.length}</span>
           </div>
           {g.items.length === 0 && <p style={{ margin: 0, fontSize: 14 }}>None right now.</p>}
@@ -67,7 +59,9 @@ export default async function ReviewsAdmin() {
                 <span aria-label={`${r.rating} out of 5 stars`} role="img" style={{ letterSpacing: 2 }}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
               </div>
               <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-line" }}>{r.body}</p>
-              <span className="allergens">{r.orders ? `${r.orders.code} · ordered as ${r.orders.customer_name}` : ""}</span>
+              {r.orders
+                ? <span className="allergens"><span className="badge ok" style={{ padding: "3px 8px", marginRight: 6 }}>verified order</span>{r.orders.code} · ordered as {r.orders.customer_name}</span>
+                : <span className="allergens">left from the shop page</span>}
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                 {r.status !== "hidden" && (
                   <form action={setStatus}><input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="hidden" /><button className="mini ghost">Hide</button></form>

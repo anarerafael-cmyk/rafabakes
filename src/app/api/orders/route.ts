@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { alertOrder } from "@/lib/email";
 import { getDb, getStripe, siteUrl } from "@/lib/server";
 import type { PaymentMethod } from "@/lib/types";
 
@@ -55,6 +56,9 @@ export async function POST(req: Request) {
   }
 
   const order = (data as { order_id: string; order_code: string; total_cents: number }[])[0];
+
+  // Email Rafael after the response is sent, so the customer isn't kept waiting.
+  after(() => alertOrder(order.order_id, "new"));
 
   if (b.method !== "card") {
     return NextResponse.json({ redirect: `/order/${order.order_code}` });

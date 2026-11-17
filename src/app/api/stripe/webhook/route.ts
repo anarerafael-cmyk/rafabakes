@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { alertOrder } from "@/lib/email";
 import { getDb, getStripe } from "@/lib/server";
 
 // Stripe calls this when a card payment finishes, so orders get marked paid on their own.
@@ -23,10 +24,13 @@ export async function POST(req: Request) {
   const orderId = session.metadata?.order_id;
 
   if (orderId && event.type === "checkout.session.completed" && session.payment_status === "paid") {
-    await db.from("orders")
+    const { data: updated } = await db.from("orders")
       .update({ status: "paid", paid_at: new Date().toISOString() })
       .eq("id", orderId)
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .select("id");
+    // Only email once, even if Stripe sends the event twice.
+    if (updated?.length) await alertOrder(orderId, "paid");
   }
 
   // Abandoned card checkout: free the loaves back up for other customers.
