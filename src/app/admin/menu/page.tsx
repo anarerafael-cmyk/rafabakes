@@ -7,6 +7,7 @@ import { ALLERGENS, money } from "@/lib/types";
 import PhotoInput from "./PhotoInput";
 import RecipeEditor from "./RecipeEditor";
 import AdminHeader from "../Header";
+import SubmitButton from "../SubmitButton";
 import { addProduct, archiveProduct, createDrop, toggleProduct, updateCaps, updateProduct } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -156,7 +157,7 @@ export default async function MenuPage({ searchParams }: { searchParams: Promise
                 </div>
               ))}
             </fieldset>
-            <button className="cta" style={{ fontSize: 18, minHeight: 56 }}>Start this drop</button>
+            <SubmitButton className="cta" style={{ fontSize: 18, minHeight: 56 }} busyText="Starting…">Start this drop</SubmitButton>
           </form>
         )}
       </section>

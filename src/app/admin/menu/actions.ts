@@ -92,6 +92,14 @@ export async function createDrop(form: FormData) {
   const closes = denverLocalToIso(String(form.get("closes_at") ?? ""));
   if (!opens || !closes || new Date(closes) <= new Date(opens)) back("Check the open and close times. Close has to be after open.");
 
+  // Don't let two drops be open at once (e.g. from tapping "Start this drop" twice).
+  const { data: clash } = await db.from("drops").select("id, closes_at")
+    .lt("opens_at", closes!).gt("closes_at", opens!).limit(1);
+  if (clash?.length) {
+    const until = new Date(clash[0].closes_at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Denver" });
+    back(`That overlaps a drop that's already set up (open until ${until}). Set this one to open after that.`);
+  }
+
   const slots = String(form.get("pickup_slots") ?? "")
     .split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 12);
 

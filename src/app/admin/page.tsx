@@ -6,7 +6,7 @@ import { formatDropTime, money } from "@/lib/types";
 import AdminHeader from "./Header";
 import IngredientList, { type BakeNeeds } from "./IngredientList";
 import LoginForm from "./LoginForm";
-import { cancelOrder, closeDropNow, markPaid, markUnpaid } from "./actions";
+import { cancelOrder, closeDropNow, deleteEmptyDrop, markPaid, markUnpaid } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "baker view · rafa", robots: { index: false } };
@@ -20,7 +20,7 @@ type OrderRow = {
 
 const METHOD = { card: "Card", venmo: "Venmo", zelle: "Zelle" } as const;
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ drop?: string }> }) {
   if (!adminConfigured()) {
     return (
       <main className="page">
@@ -48,10 +48,26 @@ export default async function AdminPage() {
     </nav>
   );
 
-  const now = new Date().toISOString();
-  const { data: opened } = await db.from("drops").select("*").lte("opens_at", now).order("opens_at", { ascending: false }).limit(1);
-  const { data: upcoming } = await db.from("drops").select("*").gt("opens_at", now).order("opens_at").limit(1);
-  const drop = opened?.[0] ?? upcoming?.[0];
+  // Same rule as the shop: the oldest drop that hasn't closed yet is "this week".
+  // Falls back to the most recent closed drop. ?drop=<id> picks another one.
+  const { drop: picked } = await searchParams;
+  const nowMs = Date.now();
+  const { data: recentData } = await db.from("drops").select("*").order("opens_at", { ascending: false }).limit(10);
+  const recent = recentData ?? [];
+  const notClosed = recent.filter((d) => new Date(d.closes_at).getTime() >= nowMs)
+    .sort((a, b) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime());
+  const shopDrop = notClosed[0] ?? recent[0];
+  const drop = recent.find((d) => d.id === picked) ?? shopDrop;
+  const openNow = recent.filter((d) => new Date(d.opens_at).getTime() <= nowMs && new Date(d.closes_at).getTime() > nowMs);
+
+  // Order counts per drop, for the drop switcher.
+  const { data: countRows } = await db.from("orders").select("drop_id, status").in("drop_id", recent.length ? recent.map((d) => d.id) : ["00000000-0000-0000-0000-000000000000"]);
+  const orderCount = new Map<string, number>();
+  for (const r of countRows ?? []) if (r.status !== "cancelled") orderCount.set(r.drop_id, (orderCount.get(r.drop_id) ?? 0) + 1);
+  const dropName = (d: { pickup_date?: string | null; pickup_label: string; opens_at: string }) =>
+    d.pickup_date
+      ? "pickup " + new Date(d.pickup_date + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+      : "opened " + new Date(d.opens_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/Denver" });
 
   if (!drop) {
     return (
@@ -123,6 +139,30 @@ export default async function AdminPage() {
 
       {nav}
 
+      {openNow.length > 1 && (
+        <div className="error" role="alert">
+          {openNow.length} drops are open at the same time. The shop only sells from the oldest one ({dropName(shopDrop)}).
+          Delete or close the extra one below so this doesn&apos;t get confusing.
+        </div>
+      )}
+
+      {recent.length > 1 && (
+        <nav aria-label="Drops" style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+          {recent.slice(0, 6).map((d) => (
+            <Link key={d.id} href={d.id === shopDrop.id ? "/admin" : `/admin?drop=${d.id}`}
+                  className="chip" aria-current={d.id === drop.id ? "page" : undefined}
+                  style={{ flex: "none", minHeight: 44, padding: "0 14px", textDecoration: "none", background: d.id === drop.id ? "var(--butter)" : "#fff", boxShadow: d.id === drop.id ? "3px 3px 0 var(--ink)" : "none" }}>
+              {d.id === shopDrop.id && <span className="dot open" />}
+              {dropName(d)} · {orderCount.get(d.id) ?? 0} {(orderCount.get(d.id) ?? 0) === 1 ? "order" : "orders"}
+            </Link>
+          ))}
+        </nav>
+      )}
+
+      {drop.id !== shopDrop.id && (
+        <div className="notice">You&apos;re looking at an older or extra drop. <Link href="/admin">Back to the one the shop is selling</Link>.</div>
+      )}
+
       <section className="card panel" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <h2 style={{ fontSize: 24 }}>bake list</h2>
@@ -145,6 +185,12 @@ export default async function AdminPage() {
       <section className="card panel" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <h2 style={{ fontSize: 24 }}>orders</h2>
         {sorted.length === 0 && <p style={{ margin: 0, fontSize: 14 }}>No orders yet.</p>}
+        {orders.length === 0 && (
+          <form action={deleteEmptyDrop}>
+            <input type="hidden" name="id" value={drop.id} />
+            <button className="mini danger">Delete this drop (it has no orders)</button>
+          </form>
+        )}
         {sorted.map((o) => {
           const abandoned = o.status === "pending" && o.payment_method === "card";
           return (

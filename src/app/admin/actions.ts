@@ -57,3 +57,15 @@ export async function closeDropNow(form: FormData) {
   revalidatePath("/admin");
   revalidatePath("/");
 }
+
+export async function deleteEmptyDrop(form: FormData) {
+  const db = await requireAdmin();
+  const id = String(form.get("id"));
+  const { count } = await db.from("orders").select("id", { count: "exact", head: true }).eq("drop_id", id);
+  if (count) return; // never delete a drop that has orders, even cancelled ones
+  await db.from("drop_items").delete().eq("drop_id", id);
+  await db.from("drops").delete().eq("id", id);
+  revalidatePath("/admin");
+  revalidatePath("/");
+  redirect("/admin");
+}
